@@ -13,8 +13,6 @@ var ws = new WebSocketServer({
     autoAcceptConnections: false
 });
 
-var ROPE_HEIGHT = 5;
-
 var waiting_player = null;
 
 function GameSession(p1, p2) {
@@ -24,6 +22,7 @@ function GameSession(p1, p2) {
     this._p1_state = {height: 0, max_knots: 0, win: false};
     this._p2_state = {height: 0, max_knots: 0, win: false};
     this._active_player = p1;
+    this._rope_length = 5 + Math.floor(Math.random() * 6);
 }
 
 GameSession.prototype.getState = function() {
@@ -31,13 +30,13 @@ GameSession.prototype.getState = function() {
         self: this._p1_state,
         other: this._p2_state,
         your_turn: this._active_player == this.p1,
-        rope_height: ROPE_HEIGHT
+        rope_height: this._rope_length
     };
     var p2_state = {
         self: this._p2_state,
         other: this._p1_state,
         your_turn: this._active_player == this.p2,
-        rope_height: ROPE_HEIGHT
+        rope_height: this._rope_length
     };
 
     return [p1_state, p2_state];
@@ -65,7 +64,7 @@ GameSession.prototype.makeMove = function(p, move) {
         var success = Math.floor(Math.random() * 2);
         if (success) {
             state.height++;
-            if (state.height == ROPE_HEIGHT) {
+            if (state.height >= this._rope_length) {
                 state.win = true;
             }
         } else {

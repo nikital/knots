@@ -16,16 +16,24 @@ function Knots() {
 }
 
 Knots.prototype._onMessage = function(e) {
+    var data = JSON.parse(e.data),
+        disabled = !data.your_turn || data.self.win || data.other.win;
+
     console.log(e.data);
-    var data = JSON.parse(e.data);
     this._self_height.value = data.self.height;
     this._self_knot.value = data.self.max_knots;
     this._other_height.value = data.other.height;
     this._other_knot.value = data.other.max_knots;
     this._rope_height.value = data.rope_height
 
-    this._climb_btn.disabled = !data.your_turn;
-    this._tie_btn.disabled = !data.your_turn;
+    this._climb_btn.disabled = disabled;
+    this._tie_btn.disabled = disabled;
+
+    if (data.self.win) {
+        alert('You win!');
+    } else if (data.other.win) {
+        alert('Bend over ( ͡° ͜ʖ ͡°)');
+    }
 };
 
 Knots.prototype._onClimb = function() {
