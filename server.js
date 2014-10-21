@@ -16,8 +16,8 @@ var ws = new WebSocketServer({
 var waiting_player = null;
 
 function GameSession(p1, p2) {
-    this._p1 = p1;
-    this._p2 = p2;
+    this.p1 = p1;
+    this.p2 = p2;
 
     this._p1_state = {height: 0, max_knots: 0};
     this._p2_state = {height: 0, max_knots: 0};
@@ -28,12 +28,12 @@ GameSession.prototype.getState = function() {
     var p1_state = {
         self: this._p1_state,
         other: this._p2_state,
-        your_turn: this._active_player == this._p1
+        your_turn: this._active_player == this.p1
     };
     var p2_state = {
         self: this._p2_state,
         other: this._p1_state,
-        your_turn: this._active_player == this._p2
+        your_turn: this._active_player == this.p2
     };
 
     return [p1_state, p2_state];
@@ -45,12 +45,12 @@ GameSession.prototype.makeMove = function(p, move) {
         return;
     }
 
-    if (p == this._p1) {
+    if (p == this.p1) {
         state = this._p1_state;
-        this._active_player = this._p2;
-    } else if (p == this._p2) {
+        this._active_player = this.p2;
+    } else if (p == this.p2) {
         state = this._p2_state;
-        this._active_player = this._p1;
+        this._active_player = this.p1;
     } else {
         // TODO handle
     }
@@ -58,8 +58,12 @@ GameSession.prototype.makeMove = function(p, move) {
     if (move == 'tie') {
         state.max_knots = state.height;
     } else if (move == 'climb') {
-        // TODO handle
-        state.height++;
+        var success = Math.floor(Math.random() * 2);
+        if (success) {
+            state.height++;
+        } else {
+            state.height = state.max_knots;
+        }
     } else {
         // TODO handle
     }
@@ -87,18 +91,19 @@ function startGame(p1, p2) {
     p1.on('message', onMessage.bind(p1));
     p2.on('message', onMessage.bind(p2));
 
-    var states = session.getState();
-    p1.sendUTF(JSON.stringify(states[0]));
-    p2.sendUTF(JSON.stringify(states[1]));
+    updateStates(session);
 }
 
 function onMessage(e) {
     var session = this.session;
     session.makeMove(this, e.utf8Data);
+    updateStates(session);
+}
 
+function updateStates(session) {
     var states = session.getState();
-    session._p1.sendUTF(JSON.stringify(states[0]));
-    session._p2.sendUTF(JSON.stringify(states[1]));
+    session.p1.sendUTF(JSON.stringify(states[0]));
+    session.p2.sendUTF(JSON.stringify(states[1]));
 }
 
 ws.on('request', function(req) {
