@@ -39,6 +39,32 @@ GameSession.prototype.getState = function() {
     return [p1_state, p2_state];
 };
 
+GameSession.prototype.makeMove = function(p, move) {
+    var state;
+    if (p != this._active_player) {
+        return;
+    }
+
+    if (p == this._p1) {
+        state = this._p1_state;
+        this._active_player = this._p2;
+    } else if (p == this._p2) {
+        state = this._p2_state;
+        this._active_player = this._p1;
+    } else {
+        // TODO handle
+    }
+
+    if (move == 'tie') {
+        state.max_knots = state.height;
+    } else if (move == 'climb') {
+        // TODO handle
+        state.height++;
+    } else {
+        // TODO handle
+    }
+};
+
 function onPlayerJoin(req) {
     // TODO proper origin
     var player1 = req.accept('knots', req.origin);
@@ -68,15 +94,11 @@ function startGame(p1, p2) {
 
 function onMessage(e) {
     var session = this.session;
-    if (session._p1 === this) {
-        console.log('msg from p1');
-    } else if (session._p2 === this) {
-        console.log('msg from p2');
-    } else {
-        console.log('wtf');
-    }
+    session.makeMove(this, e.utf8Data);
 
-    console.log(e.utf8Data);
+    var states = session.getState();
+    session._p1.sendUTF(JSON.stringify(states[0]));
+    session._p2.sendUTF(JSON.stringify(states[1]));
 }
 
 ws.on('request', function(req) {
