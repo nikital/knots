@@ -19,9 +19,25 @@ function GameSession(p1, p2) {
     this._p1 = p1;
     this._p2 = p2;
 
-    p1.sendUTF('start');
-    p2.sendUTF('start');
+    this._p1_state = {height: 0, max_knots: 0};
+    this._p2_state = {height: 0, max_knots: 0};
+    this._active_player = p1;
 }
+
+GameSession.prototype.getState = function() {
+    var p1_state = {
+        self: this._p1_state,
+        other: this._p2_state,
+        your_turn: this._active_player == this._p1
+    };
+    var p2_state = {
+        self: this._p2_state,
+        other: this._p1_state,
+        your_turn: this._active_player == this._p2
+    };
+
+    return [p1_state, p2_state];
+};
 
 function onPlayerJoin(req) {
     // TODO proper origin
@@ -44,6 +60,10 @@ function startGame(p1, p2) {
 
     p1.on('message', onMessage.bind(p1));
     p2.on('message', onMessage.bind(p2));
+
+    var states = session.getState();
+    p1.sendUTF(JSON.stringify(states[0]));
+    p2.sendUTF(JSON.stringify(states[1]));
 }
 
 function onMessage(e) {
