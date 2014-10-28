@@ -47,7 +47,9 @@ Knots.prototype._onMessage = function(e) {
 
     this._steps.setSteps(data.rope_height);
     this._rope_self.setPlayer(data.self.height, data.rope_height);
+    this._rope_self.setKnot(data.self.max_knots);
     this._rope_other.setPlayer(data.other.height, data.rope_height);
+    this._rope_other.setKnot(data.other.max_knots);
 
     this._self_height.value = data.self.height;
     this._self_knot.value = data.self.max_knots;
@@ -77,6 +79,7 @@ function Rope(height) {
     this.initialize();
 
     this._height = height;
+    this._maxKnot = undefined;
 
     this._rope = new createjs.Shape();
     this._rope.graphics.
@@ -88,7 +91,6 @@ function Rope(height) {
     this._player.graphics.
         beginFill("red").
         drawRect(-5, -5, 10, 10);
-    this.setPlayer(0, 1);
     this.addChild(this._player);
 }
 
@@ -98,6 +100,23 @@ Rope.prototype.setPlayer = function(step, totalSteps) {
     var stepHeight = this._height / totalSteps;
     this._player.y = stepHeight / 2 + stepHeight * (totalSteps - step - 1);
 };
+
+Rope.prototype.setKnot = function(maxKnot) {
+    var knot;
+
+    if (maxKnot === this._maxKnot) {
+        return;
+    }
+
+    knot = new createjs.Shape();
+    knot.graphics.
+        beginFill("teal").
+        drawCircle(0, 0, 4);
+    knot.y = this._player.y;
+    this.addChild(knot);
+
+    this._maxKnot = maxKnot;
+}
 
 function Steps(height) {
     this.initialize();
