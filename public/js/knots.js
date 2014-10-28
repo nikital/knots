@@ -45,6 +45,15 @@ Knots.prototype._onMessage = function(e) {
 
     console.log(e.data);
 
+    if (data.other_disconnected) {
+        alert('Other player disconnected');
+
+        this._climb_btn.disabled = disabled;
+        this._tie_btn.disabled = disabled;
+
+        return;
+    }
+
     this._steps.setSteps(data.rope_height);
     this._rope_self.setPlayer(data.self.height, data.rope_height);
     this._rope_self.setKnot(data.self.max_knots);
@@ -91,6 +100,7 @@ function Rope(height) {
     this._player.graphics.
         beginFill("red").
         drawRect(-5, -5, 10, 10);
+    this._player.y = -100;
     this.addChild(this._player);
 }
 

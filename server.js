@@ -78,14 +78,22 @@ GameSession.prototype.makeMove = function(p, move) {
 function onPlayerJoin(req) {
     // TODO proper origin
     var player1 = req.accept('knots', req.origin);
-    // TODO handle close
 
     if (waiting_player) {
         var player2 = waiting_player;
+        waiting_player.removeListener('close', onPlayerCloseBeforeGame);
         waiting_player = null;
+
         startGame(player1, player2);
     } else {
         waiting_player = player1;
+        waiting_player.on('close', onPlayerCloseBeforeGame);
+    }
+}
+
+function onPlayerCloseBeforeGame() {
+    if (this === waiting_player) {
+        waiting_player = null;
     }
 }
 
@@ -96,6 +104,8 @@ function startGame(p1, p2) {
 
     p1.on('message', onMessage.bind(p1));
     p2.on('message', onMessage.bind(p2));
+    p1.on('close', onPlayerClose);
+    p2.on('close', onPlayerClose);
 
     updateStates(session);
 }
@@ -104,6 +114,15 @@ function onMessage(e) {
     var session = this.session;
     session.makeMove(this, e.utf8Data);
     updateStates(session);
+}
+
+function onPlayerClose() {
+    var session = this.session,
+        otherPlayer = (this === session.p1) ? session.p2 : session.p1;
+
+    otherPlayer.sendUTF(JSON.stringify({other_disconnected: true}));
+    otherPlayer.removeListener('close', onPlayerClose);
+    otherPlayer.close();
 }
 
 function updateStates(session) {
