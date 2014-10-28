@@ -1,5 +1,6 @@
 function Knots() {
     var ROPE_HEIGHT = 500;
+    var STEPS = 5;
 
     this._ws = new WebSocket('ws://' + window.location.host + '/player', 'knots');
     this._ws.onmessage = this._onMessage.bind(this);
@@ -14,12 +15,10 @@ function Knots() {
     this._rope_other.x = 800/3*2;
 
     this._steps = new Steps(ROPE_HEIGHT);
-    this._stage.addChild(this._steps);
 
+    this._stage.addChild(this._steps);
     this._stage.addChild(this._rope_self);
     this._stage.addChild(this._rope_other);
-
-    this._steps.setSteps(5);
 
     this._climb_btn = document.getElementById('climb');
     this._tie_btn = document.getElementById('tie');
@@ -32,7 +31,12 @@ function Knots() {
     this._other_knot = document.getElementById('other-knot');
     this._rope_height = document.getElementById('rope-height');
 
-    requestAnimationFrame(this._stage.update.bind(this._stage));
+    this._onFrame();
+}
+
+Knots.prototype._onFrame = function() {
+    this._stage.update();
+    requestAnimationFrame(this._onFrame.bind(this));
 }
 
 Knots.prototype._onMessage = function(e) {
@@ -40,6 +44,11 @@ Knots.prototype._onMessage = function(e) {
         disabled = !data.your_turn || data.self.win || data.other.win;
 
     console.log(e.data);
+
+    this._steps.setSteps(data.rope_height);
+    this._rope_self.setPlayer(data.self.height, data.rope_height);
+    this._rope_other.setPlayer(data.other.height, data.rope_height);
+
     this._self_height.value = data.self.height;
     this._self_knot.value = data.self.max_knots;
     this._other_height.value = data.other.height;
@@ -65,7 +74,7 @@ Knots.prototype._onTie = function() {
 };
 
 function Rope(height) {
-    this.DisplayObject_initialize();
+    this.initialize();
 
     this._height = height;
 
@@ -79,22 +88,26 @@ function Rope(height) {
     this._player.graphics.
         beginFill("red").
         drawRect(-5, -5, 10, 10);
-    this._player.y = height - 20;
+    this.setPlayer(0, 1);
     this.addChild(this._player);
 }
 
 Rope.prototype = new createjs.Container();
-Rope.prototype.constructor = Rope;
+
+Rope.prototype.setPlayer = function(step, totalSteps) {
+    var stepHeight = this._height / totalSteps;
+    this._player.y = stepHeight / 2 + stepHeight * (totalSteps - step - 1);
+};
 
 function Steps(height) {
-    this.DisplayObject_initialize();
+    this.initialize();
     this._height = height;
 }
 
 Steps.prototype = new createjs.Shape();
 Steps.prototype.constructor = Steps;
 
-Steps.prototype.setSteps = function (steps) {
+Steps.prototype.setSteps = function(steps) {
     var i;
 
     this.graphics.
