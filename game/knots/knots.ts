@@ -4,11 +4,16 @@
 class Knots
 {
     private stage:createjs.Stage;
+    private width:number;
+    private height:number;
+
     private game:Game;
 
-    constructor(canvas:string)
+    constructor(canvas:HTMLCanvasElement)
     {
         this.stage = new createjs.Stage(canvas);
+        this.width = canvas.width;
+        this.height = canvas.height;
 
         this.create_game();
 
@@ -17,7 +22,7 @@ class Knots
 
     private create_game():void
     {
-        this.game = new Game();
+        this.game = new Game(this.width, this.height);
         this.stage.addChild(this.game);
     }
 
@@ -29,4 +34,4 @@ class Knots
     }
 }
 
-var knots = new Knots('knots');
+var knots = new Knots(<HTMLCanvasElement>document.getElementById('knots'));
