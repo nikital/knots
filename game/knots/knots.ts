@@ -18,7 +18,7 @@ class Knots
     private create_game():void
     {
         this.game = new Game();
-        this.stage.addChild(this.game.container);
+        this.stage.addChild(this.game);
     }
 
     private on_frame():void
@@ -29,4 +29,4 @@ class Knots
     }
 }
 
-var knots = new Knots('game');
+var knots = new Knots('knots');
