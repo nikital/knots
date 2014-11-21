@@ -29,6 +29,7 @@ class Knots
     private on_frame():void
     {
         this.game.on_frame();
+
         this.stage.update();
         requestAnimationFrame(this.on_frame.bind(this));
     }
