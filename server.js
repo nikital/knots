@@ -15,6 +15,11 @@ var ws = new WebSocketServer({
 
 var waiting_player = null;
 
+// TODO clean up conventios:
+// variable_names
+// func_names
+// ClassNames
+
 function GameSession(p1, p2) {
     this.p1 = p1;
     this.p2 = p2;
@@ -25,18 +30,20 @@ function GameSession(p1, p2) {
     this._rope_length = 5 + Math.floor(Math.random() * 6);
 }
 
+GameSession.prototype.getParams = function() {
+    return {rope_length: this._rope_length};
+};
+
 GameSession.prototype.getState = function() {
     var p1_state = {
         self: this._p1_state,
         other: this._p2_state,
         your_turn: this._active_player == this.p1,
-        rope_height: this._rope_length
     };
     var p2_state = {
         self: this._p2_state,
         other: this._p1_state,
         your_turn: this._active_player == this.p2,
-        rope_height: this._rope_length
     };
 
     return [p1_state, p2_state];
@@ -98,6 +105,7 @@ function onPlayerCloseBeforeGame() {
 }
 
 function startGame(p1, p2) {
+    // TODO randomize order
     var session = new GameSession(p1, p2);
     p1.session = session;
     p2.session = session;
@@ -107,6 +115,7 @@ function startGame(p1, p2) {
     p1.on('close', onPlayerClose);
     p2.on('close', onPlayerClose);
 
+    sendGameStart(session);
     updateStates(session);
 }
 
@@ -114,21 +123,30 @@ function onMessage(e) {
     var session = this.session;
     session.makeMove(this, e.utf8Data);
     updateStates(session);
+    // TODO send a specific win message and drop connection
 }
 
 function onPlayerClose() {
     var session = this.session,
-        otherPlayer = (this === session.p1) ? session.p2 : session.p1;
+        other_player = (this === session.p1) ? session.p2 : session.p1;
 
-    otherPlayer.sendUTF(JSON.stringify({other_disconnected: true}));
-    otherPlayer.removeListener('close', onPlayerClose);
-    otherPlayer.close();
+    other_player.sendUTF(JSON.stringify({other_disconnected: true}));
+    other_player.removeListener('close', onPlayerClose);
+    other_player.close();
+}
+
+function sendGameStart(session) {
+    var game_start = {
+        game_start: session.getParams()
+    };
+    session.p1.sendUTF(JSON.stringify(game_start));
+    session.p2.sendUTF(JSON.stringify(game_start));
 }
 
 function updateStates(session) {
     var states = session.getState();
-    session.p1.sendUTF(JSON.stringify(states[0]));
-    session.p2.sendUTF(JSON.stringify(states[1]));
+    session.p1.sendUTF(JSON.stringify({state: states[0]}));
+    session.p2.sendUTF(JSON.stringify({state: states[1]}));
 }
 
 ws.on('request', function(req) {
