@@ -1,5 +1,6 @@
 /// <reference path="../defs/easeljs/easeljs.d.ts" />
 /// <reference path="rope.ts" />
+/// <reference path="server_message.ts" />
 
 class Game extends createjs.Container
 {
@@ -46,7 +47,25 @@ class Game extends createjs.Container
 
     private on_message(e:MessageEvent):void
     {
-        console.log(e);
+        var msg = <Server_message>JSON.parse(e.data);
+        if (msg.game_start !== undefined)
+        {
+            var game_start = msg.game_start;
+            console.log('Game started with rope: ' + game_start.rope_length);
+        }
+        else if (msg.state !== undefined)
+        {
+            var state = msg.state;
+            console.log('Current state', state);
+        }
+        else if (msg.other_disconnected !== undefined)
+        {
+            console.log('Other player disconnected');
+        }
+        else
+        {
+            console.warn('Unknown message');
+        }
     }
 
     private on_socket_close(e:CloseEvent):void
