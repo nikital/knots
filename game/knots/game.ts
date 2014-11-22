@@ -1,5 +1,6 @@
 /// <reference path="../defs/easeljs/easeljs.d.ts" />
 /// <reference path="rope.ts" />
+/// <reference path="grid.ts" />
 /// <reference path="control.ts" />
 /// <reference path="server_message.ts" />
 
@@ -8,6 +9,7 @@ class Game extends createjs.Container
     private static SOCKET_ENDPOINT = 'ws://' + window.location.host + '/player';
 
     private control:Control;
+    private grid:Grid;
     private self:Rope;
     private other:Rope;
 
@@ -29,15 +31,28 @@ class Game extends createjs.Container
         this.control.x = 100;
         this.control.y = this.height / 2;
 
-        this.self = new Rope(this.height - 100);
-        this.self.x = this.width / 3;
-        this.self.y = 50;
+        // do rope layout
+        var self_rope_x = this.width / 3;
+        var rope_y = 50;
+        var rope_height = this.height - 100;
+        var other_rope_x = this.width / 3 * 2;
+        var grid_expand_x = 50;
 
-        this.other = new Rope(this.height - 100);
-        this.other.x = this.width / 3 * 2;
-        this.other.y = 50;
+        this.self = new Rope(rope_height);
+        this.self.x = self_rope_x
+        this.self.y = rope_y;
+
+        this.other = new Rope(rope_height);
+        this.other.x = other_rope_x;
+        this.other.y = rope_y;
+
+        var rect = new createjs.Rectangle(
+            self_rope_x - grid_expand_x, rope_y,
+            other_rope_x - self_rope_x + grid_expand_x * 2, rope_height);
+        this.grid = new Grid(rect);
 
         this.addChild(this.control);
+        this.addChild(this.grid);
         this.addChild(this.self);
         this.addChild(this.other);
     }
@@ -60,7 +75,7 @@ class Game extends createjs.Container
         if (msg.game_start !== undefined)
         {
             var game_start = msg.game_start;
-            console.log('Game started with rope: ' + game_start.rope_length);
+            this.grid.set_steps(game_start.rope_length);
         }
         else if (msg.state !== undefined)
         {
