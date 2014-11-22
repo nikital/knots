@@ -15,11 +15,6 @@ var ws = new WebSocketServer({
 
 var waiting_player = null;
 
-// TODO clean up conventios:
-// variable_names
-// func_names
-// ClassNames
-
 function GameSession(p1, p2) {
     this.p1 = p1;
     this.p2 = p2;
@@ -30,11 +25,11 @@ function GameSession(p1, p2) {
     this._rope_length = 5 + Math.floor(Math.random() * 6);
 }
 
-GameSession.prototype.getParams = function() {
+GameSession.prototype.get_params = function() {
     return {rope_length: this._rope_length};
 };
 
-GameSession.prototype.getState = function() {
+GameSession.prototype.get_state = function() {
     var p1_state = {
         self: this._p1_state,
         other: this._p2_state,
@@ -49,7 +44,7 @@ GameSession.prototype.getState = function() {
     return [p1_state, p2_state];
 };
 
-GameSession.prototype.makeMove = function(p, move) {
+GameSession.prototype.make_move = function(p, move) {
     var state;
     if (p != this._active_player) {
         return;
@@ -82,69 +77,69 @@ GameSession.prototype.makeMove = function(p, move) {
     }
 };
 
-function onPlayerJoin(req) {
+function on_player_join(req) {
     // TODO proper origin
     var player1 = req.accept('knots', req.origin);
 
     if (waiting_player) {
         var player2 = waiting_player;
-        waiting_player.removeListener('close', onPlayerCloseBeforeGame);
+        waiting_player.removeListener('close', on_player_close_before_game);
         waiting_player = null;
 
-        startGame(player1, player2);
+        start_game(player1, player2);
     } else {
         waiting_player = player1;
-        waiting_player.on('close', onPlayerCloseBeforeGame);
+        waiting_player.on('close', on_player_close_before_game);
     }
 }
 
-function onPlayerCloseBeforeGame() {
+function on_player_close_before_game() {
     if (this === waiting_player) {
         waiting_player = null;
     }
 }
 
-function startGame(p1, p2) {
+function start_game(p1, p2) {
     // TODO randomize order
     var session = new GameSession(p1, p2);
     p1.session = session;
     p2.session = session;
 
-    p1.on('message', onMessage.bind(p1));
-    p2.on('message', onMessage.bind(p2));
-    p1.on('close', onPlayerClose);
-    p2.on('close', onPlayerClose);
+    p1.on('message', on_message.bind(p1));
+    p2.on('message', on_message.bind(p2));
+    p1.on('close', on_player_close);
+    p2.on('close', on_player_close);
 
-    sendGameStart(session);
-    updateStates(session);
+    send_game_start(session);
+    update_states(session);
 }
 
-function onMessage(e) {
+function on_message(e) {
     var session = this.session;
-    session.makeMove(this, e.utf8Data);
-    updateStates(session);
+    session.make_move(this, e.utf8Data);
+    update_states(session);
     // TODO send a specific win message and drop connection
 }
 
-function onPlayerClose() {
+function on_player_close() {
     var session = this.session,
         other_player = (this === session.p1) ? session.p2 : session.p1;
 
     other_player.sendUTF(JSON.stringify({other_disconnected: true}));
-    other_player.removeListener('close', onPlayerClose);
+    other_player.removeListener('close', on_player_close);
     other_player.close();
 }
 
-function sendGameStart(session) {
+function send_game_start(session) {
     var game_start = {
-        game_start: session.getParams()
+        game_start: session.get_params()
     };
     session.p1.sendUTF(JSON.stringify(game_start));
     session.p2.sendUTF(JSON.stringify(game_start));
 }
 
-function updateStates(session) {
-    var states = session.getState();
+function update_states(session) {
+    var states = session.get_state();
     session.p1.sendUTF(JSON.stringify({state: states[0]}));
     session.p2.sendUTF(JSON.stringify({state: states[1]}));
 }
@@ -152,7 +147,7 @@ function updateStates(session) {
 ws.on('request', function(req) {
     if (false) {
     } else if (req.resourceURL.pathname == '/player') {
-        onPlayerJoin(req);
+        on_player_join(req);
     } else {
         req.reject(404, 'Endpoint not found');
     }
