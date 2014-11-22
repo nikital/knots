@@ -12,6 +12,8 @@ class Knots
     constructor(canvas:HTMLCanvasElement)
     {
         this.stage = new createjs.Stage(canvas);
+        this.stage.enableMouseOver();
+
         this.width = canvas.width;
         this.height = canvas.height;
 

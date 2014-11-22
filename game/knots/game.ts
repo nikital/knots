@@ -1,11 +1,13 @@
 /// <reference path="../defs/easeljs/easeljs.d.ts" />
 /// <reference path="rope.ts" />
+/// <reference path="control.ts" />
 /// <reference path="server_message.ts" />
 
 class Game extends createjs.Container
 {
     private static SOCKET_ENDPOINT = 'ws://' + window.location.host + '/player';
 
+    private control:Control;
     private self:Rope;
     private other:Rope;
 
@@ -21,6 +23,10 @@ class Game extends createjs.Container
 
     private init_ui()
     {
+        this.control = new Control();
+        this.control.x = 100;
+        this.control.y = this.height / 2;
+
         this.self = new Rope(this.height - 100);
         this.self.x = this.width / 3;
         this.self.y = 50;
@@ -29,6 +35,7 @@ class Game extends createjs.Container
         this.other.x = this.width / 3 * 2;
         this.other.y = 50;
 
+        this.addChild(this.control);
         this.addChild(this.self);
         this.addChild(this.other);
     }
