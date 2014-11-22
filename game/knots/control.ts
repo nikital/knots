@@ -8,7 +8,6 @@ class Text_button extends createjs.Container
 
         var shape = new createjs.Shape();
         shape.graphics.beginFill('#AAA').drawCircle(0, 0, 40);
-        shape.cursor = 'pointer';
 
         var textfield = new createjs.Text(text, '24px arial');
         textfield.x = -textfield.getMeasuredWidth() / 2;
@@ -16,6 +15,8 @@ class Text_button extends createjs.Container
 
         this.addChild(shape);
         this.addChild(textfield);
+
+        this.cursor = 'pointer';
     }
 }
 
@@ -36,5 +37,8 @@ class Control extends createjs.Container
 
         this.addChild(this.climb);
         this.addChild(this.tie);
+
+        this.climb.on('click', () => { this.dispatchEvent('control', 'climb'); });
+        this.tie.on('click', () => { this.dispatchEvent('control', 'tie'); });
     }
 }

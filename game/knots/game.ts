@@ -19,6 +19,8 @@ class Game extends createjs.Container
 
         this.init_ui();
         this.init_socket();
+
+        this.control.on('control', this.on_control.bind(this));
     }
 
     private init_ui()
@@ -73,6 +75,11 @@ class Game extends createjs.Container
         {
             console.warn('Unknown message');
         }
+    }
+
+    private on_control(command:createjs.Event):void
+    {
+        this.socket.send(command.target);
     }
 
     private on_socket_close(e:CloseEvent):void
