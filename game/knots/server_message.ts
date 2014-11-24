@@ -3,7 +3,7 @@ interface Game_start_message
    rope_length:number;
 }
 
-interface Player_state_messsage
+interface Player_state_message
 {
     height:number;
     max_knots:number;
@@ -11,8 +11,8 @@ interface Player_state_messsage
 }
 interface Game_state_message
 {
-    self:Player_state_messsage;
-    other:Player_state_messsage;
+    self:Player_state_message;
+    other:Player_state_message;
     your_turn:boolean;
 }
 

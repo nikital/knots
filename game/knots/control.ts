@@ -20,6 +20,7 @@ class Text_button extends createjs.Container
     }
 }
 
+// TODO hide tie button on zero height
 class Control extends createjs.Container
 {
     private climb:Text_button;

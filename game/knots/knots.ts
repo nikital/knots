@@ -11,6 +11,8 @@ class Knots
 
     constructor(canvas:HTMLCanvasElement)
     {
+        createjs.Ticker.setFPS(60);
+
         this.stage = new createjs.Stage(canvas);
         this.stage.enableMouseOver();
 

@@ -76,11 +76,15 @@ class Game extends createjs.Container
         {
             var game_start = msg.game_start;
             this.grid.set_steps(game_start.rope_length);
+            this.self.set_steps(game_start.rope_length);
+            this.other.set_steps(game_start.rope_length);
         }
         else if (msg.state !== undefined)
         {
             var state = msg.state;
-            console.log('Current state', state);
+            this.self.update_player(msg.state.self);
+            this.other.update_player(msg.state.other);
+            console.log(state);
         }
         else if (msg.other_disconnected !== undefined)
         {
