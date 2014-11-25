@@ -68,6 +68,8 @@ class Game extends createjs.Container
 
     public on_frame():void
     {
+        this.self.on_frame();
+        this.other.on_frame();
     }
 
     private on_message(e:MessageEvent):void
