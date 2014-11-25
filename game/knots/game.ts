@@ -30,6 +30,7 @@ class Game extends createjs.Container
         this.control = new Control();
         this.control.x = 100;
         this.control.y = this.height / 2;
+        this.control.visible = false;
 
         // do rope layout
         var self_rope_x = this.width / 3;
@@ -82,8 +83,9 @@ class Game extends createjs.Container
         else if (msg.state !== undefined)
         {
             var state = msg.state;
-            this.self.update_player(msg.state.self);
-            this.other.update_player(msg.state.other);
+            this.self.update_player(state.self);
+            this.other.update_player(state.other);
+            this.control.visible = state.your_turn;
             console.log(state);
         }
         else if (msg.other_disconnected !== undefined)
