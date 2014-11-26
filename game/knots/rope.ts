@@ -88,6 +88,7 @@ class Rope extends createjs.Container
             this.knots_y.push(this.y_for_index(state.max_knots));
         }
         this.player_y = this.y_for_index(state.height);
+        this.shock_rope(this.player_y);
         // TODO do a failed climb animation
     }
 
@@ -191,6 +192,18 @@ class Rope extends createjs.Container
         }
 
         return {position: p, rotation: Math.atan2(p2.y - p1.y, p2.x - p1.x) - Math.PI / 2};
+    }
+
+    private shock_rope(y:number):void
+    {
+        var i = Math.floor(y / Rope.JOINT_DIST);
+        if (i <= 0 || i >= this.nodes.length)
+        {
+            return;
+        }
+
+        this.prev_nodes[i].x += 50;
+        this.prev_nodes[i+1].x -= 50;
     }
 
     private static relax_nodes(n:Point[]):void
