@@ -28,9 +28,11 @@ class Rope extends createjs.Container
     private nodes:Point[] = [];
     private prev_nodes:Point[];
 
+    private player_y:number = 0;
+    private knots_y:number[] = [];
+
     private rope:createjs.Shape;
     private player:createjs.Shape;
-    private knots:createjs.Shape;
 
     constructor(private height:number)
     {
@@ -47,10 +49,7 @@ class Rope extends createjs.Container
         this.player.graphics.beginFill('red').drawRect(-10, -10, 20, 20);
         this.player.visible = false;
 
-        this.knots = new createjs.Shape();
-
         this.addChild(this.rope);
-        this.addChild(this.knots);
         this.addChild(this.player);
     }
 
@@ -83,9 +82,9 @@ class Rope extends createjs.Container
 
         if (state.max_knots > this.current_state.max_knots)
         {
-            this.draw_knot(state.max_knots);
+            this.knots_y.push(this.y_for_index(state.max_knots));
         }
-        this.player.y = this.y_for_index(state.height);
+        this.player_y = this.y_for_index(state.height);
         // TODO do a failed climb animation
     }
 
@@ -93,12 +92,14 @@ class Rope extends createjs.Container
     {
         this.simulate();
         this.draw_rope();
+        this.align_objects();
     }
 
     private do_first_player_update(state:Player_state_message):void
     {
         this.player.visible = true;
-        this.player.y = this.y_for_index(0);
+        this.player_y = this.y_for_index(0);
+        this.knots_y.push(this.y_for_index(0));
 
         this.current_state = state;
     }
@@ -123,15 +124,6 @@ class Rope extends createjs.Container
         }
     }
 
-    private draw_knot(i:number):void
-    {
-        var y = this.y_for_index(i);
-
-        this.knots.graphics.
-            beginFill('black').drawCircle(0, y + 20, 8).
-            endFill();
-    }
-
     private simulate():void
     {
         var len = this.nodes.length;
@@ -152,6 +144,31 @@ class Rope extends createjs.Container
 
         this.prev_nodes = this.nodes;
         this.nodes = n;
+    }
+
+    private align_objects():void
+    {
+        var p = this.position_rotation_on_rope_from_y(this.player_y);
+        this.player.x = p.x;
+        this.player.y = p.y;
+    }
+
+    private position_rotation_on_rope_from_y(y:number):Point
+    {
+        var i1 = Math.max(0, Math.floor(y / Rope.JOINT_DIST));
+        var i2 = i1 + 1;
+        if (i2 >= this.nodes.length)
+        {
+            i2 = this.nodes.length - 1;
+            i1 = i2 - 1;
+        }
+
+        var p1 = this.nodes[i1];
+        var p2 = this.nodes[i2];
+
+        var t = y / Rope.JOINT_DIST - i1;
+
+        return p1;
     }
 
     private static relax_nodes(n:Point[]):void
