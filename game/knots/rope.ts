@@ -1,9 +1,16 @@
 /// <reference path="../defs/easeljs/easeljs.d.ts" />
 /// <reference path="server_message.ts" />
 
-class Point
+interface Point
 {
-    constructor(public x:number, public y:number) {}
+    x:number;
+    y:number;
+}
+
+interface PositionRotation
+{
+    position:Point;
+    rotation:number;
 }
 
 function clone_nodes(nodes:Point[]):Point[]
@@ -12,7 +19,7 @@ function clone_nodes(nodes:Point[]):Point[]
     var len = nodes.length;
     for (var i = 0; i < len; ++i)
     {
-        result.push(new Point(nodes[i].x, nodes[i].y));
+        result.push({x: nodes[i].x, y: nodes[i].y});
     }
     return result;
 }
@@ -41,12 +48,8 @@ class Rope extends createjs.Container
         this.rope = new createjs.Shape();
         this.create_rope_nodes(height);
 
-        var g = this.rope.graphics;
-        g.clear().setStrokeStyle(2).beginStroke("black");
-        g.moveTo(0, 0).lineTo(0, this.height);
-
         this.player = new createjs.Shape();
-        this.player.graphics.beginFill('red').drawRect(-10, -10, 20, 20);
+        this.player.graphics.beginFill('red').drawEllipse(-10, -20, 20, 30);
         this.player.visible = false;
 
         this.addChild(this.rope);
@@ -57,10 +60,10 @@ class Rope extends createjs.Container
     {
         var node_count = Math.floor(height / Rope.JOINT_DIST) + 1;
 
-        this.nodes.push(new Point(0, 0));
+        this.nodes.push({x: 0, y:0});
         for (var i = 1; i < node_count; ++i)
         {
-            var n = new Point(Math.random() * Rope.JOINT_DIST * 3, 0);
+            var n = {x: Math.random() * Rope.JOINT_DIST * 3, y: 0};
             this.nodes.push(n);
         }
 
@@ -92,7 +95,7 @@ class Rope extends createjs.Container
     {
         this.simulate();
         this.draw_rope();
-        this.align_objects();
+        this.attach_objects();
     }
 
     private do_first_player_update(state:Player_state_message):void
@@ -122,6 +125,8 @@ class Rope extends createjs.Container
         {
             g.lineTo(this.nodes[i].x, this.nodes[i].y);
         }
+
+        g.endStroke();
     }
 
     private simulate():void
@@ -146,14 +151,24 @@ class Rope extends createjs.Container
         this.nodes = n;
     }
 
-    private align_objects():void
+    private attach_objects():void
     {
         var p = this.position_rotation_on_rope_from_y(this.player_y);
-        this.player.x = p.x;
-        this.player.y = p.y;
+        this.player.x = p.position.x;
+        this.player.y = p.position.y;
+        this.player.rotation = p.rotation / Math.PI * 180;
+
+        var g = this.rope.graphics;
+        g.beginFill('black');
+        for (var i = 0; i < this.knots_y.length; ++i)
+        {
+            p = this.position_rotation_on_rope_from_y(this.knots_y[i] + 20);
+            g.drawCircle(p.position.x, p.position.y, 7);
+        }
+        g.endFill();
     }
 
-    private position_rotation_on_rope_from_y(y:number):Point
+    private position_rotation_on_rope_from_y(y:number):PositionRotation
     {
         var i1 = Math.max(0, Math.floor(y / Rope.JOINT_DIST));
         var i2 = i1 + 1;
@@ -168,7 +183,14 @@ class Rope extends createjs.Container
 
         var t = y / Rope.JOINT_DIST - i1;
 
-        return p1;
+        var dx = p2.x - p1.x;
+        var dy = p2.y - p1.y;
+        var p = {
+            x: p1.x + dx * t,
+            y: p1.y + dy * t
+        }
+
+        return {position: p, rotation: Math.atan2(p2.y - p1.y, p2.x - p1.x) - Math.PI / 2};
     }
 
     private static relax_nodes(n:Point[]):void
